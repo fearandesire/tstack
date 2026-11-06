@@ -45,21 +45,67 @@ missing or pre-failing checks in the brief.
 
 ## 2. Start Sol
 
-In T3, call `orchestrator_capabilities`. Pick the latest Sol unless the user
-named a version. Do not hardcode an ID. Record provider, model, and effort
-only if exposed. Use `delegate_task` every round (`role: "review"`,
-`mode: "async"`). Save `taskId`. New `clientRequestId` per round.
-`childThreadId` is storage, not the next target. Do not use
-`t3_thread_send`, `create_threads`, or `t3_thread_launch` for review.
+Use the Sol version and effort in the current request, then applicable project
+and global instructions, subject to the host's instruction hierarchy. Otherwise
+resolve the latest available Sol through current capabilities. Keep the Sol
+requirement: choosing a different reviewer is a different workflow. Inspect
+exposed or discoverable tools and existing agent definitions first. Never call
+an unlisted T3 tool to test whether it exists.
+Resolve effort through a supported tool field or configured model variant.
+If the route cannot express the requested effort, report that gap before dispatch.
+When T3 orchestration is available, use its route even if the parent model runs
+through Codex, Claude Code, or OpenCode. Use the native routes only outside T3;
+a failed T3 request does not authorize switching routes.
 
-If T3 tools are not listed, try one direct capability call. Outside T3, use
-a native Sol subagent and keep its ID. In Claude Code, use a custom subagent
-only if it is set up to run Sol. If no route runs Sol, report the blocker. Do
-not substitute a model.
+- **T3 Code:** resolve the model with `orchestrator_capabilities`. Use
+  `delegate_task` every round with the exposed review role and async mode.
+  Save `taskId` and use a new `clientRequestId` per round. `childThreadId`
+  is storage, not a continuation target. Use delegation, not thread-launch
+  or thread-message tools. Select the provider instance and Sol model explicitly
+  from capabilities. Use exposed `task_status` and `task_cancel` for ambiguous
+  completion and cancellation respectively.
+- **Codex:** use `spawn_agent` with an exact Sol ID from the live model list
+  and the requested `reasoning_effort` if supported. Use `fork_turns: "none"`
+  and a complete `message` when overrides require it. Save the returned agent
+  ID/task name. Collect completion notices or use `wait_agent`. Continue a new
+  round through `followup_task` on that target when exposed; `send_message`
+  alone may not restart an idle agent. Use older `resume_agent`/`wait` tools
+  only if this session exposes them. A Codex role name does not establish Sol.
+- **Claude Code:** use `Agent` only with an existing custom subagent or connected
+  route that is configured to run Sol. Native `model` aliases select Claude
+  families; passing a GPT ID or naming an agent `sol` does not enable OpenAI.
+  Set `Agent.effort` when supported, otherwise use an existing agent configured
+  for the requested effort. A different model need not inherit parent effort.
+  Save agent/task handles. Use background completion notices or the available
+  task-output tool, then `SendMessage` to the saved ID, or `Agent.resume` when
+  its schema advertises that field. If the route is one-shot, start the next
+  round with the complete prior ledger. Do not create a bridge or change
+  authentication for this review.
+- **OpenCode:** select an existing configured subagent whose resolved provider,
+  model, and variant match Sol. An agent without a model inherits the parent;
+  do not assume an agent named `reviewer` uses Sol. In v2 use `subagent` with
+  its advertised agent ID and prompt fields, save `sessionID`, and use its
+  documented continuation field. In versions exposing `task`, use its actual
+  `subagent_type` and task/session continuation fields. Do not invent per-call
+  model overrides. Foreground returns the result; background requires its
+  completion notice. A model catalog entry alone does not prove a working route.
+
+Record requested identity, dispatch route, saved handle, and effective model and
+effort when exposed. Label runtime identity unverified when unavailable. A
+reported model or effort substitution does not satisfy the requested review.
+If no available route selects Sol, report that capability gap before dispatch.
+Keep existing provider
+settings, credentials, and permissions intact.
 
 Do not edit scoped files while review runs. Wait for the notice. Do not
 poll or start a second reviewer. Timeout, error, or no reply is not
-approval. On failure, cancel, verify stop, restart with the ledger.
+approval. On failure, cancel through the exposed interrupt/stop control and
+verify that run stopped before restarting with the ledger. In Codex this is
+`interrupt_agent` or the advertised older stop tool; in Claude use the exposed
+task-stop control and returned task handle; in OpenCode use its session
+interrupt/abort control. If stop cannot be confirmed, report that blocker rather
+than start a duplicate. On an authentication failure, stop that route and report
+the destination/status. Do not retry with another identity or credential.
 
 Round 1 brief (T3 children get no history):
 
