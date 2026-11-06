@@ -72,6 +72,9 @@ Each workflow explains model resolution, dispatch, result collection,
 continuation, and cancellation for T3 Code, Codex, Claude Code, and OpenCode.
 The instructions use the tools actually exposed in the current session.
 OpenCode v2's `subagent` and older `task` tools have separate instructions.
+Inside T3 Code, the T3 orchestration route takes precedence regardless of the
+parent provider. Running `council` without a roster keeps Theo's three-provider,
+high-effort default and the same score/report/fix-and-review workflow.
 
 Native model access differs by harness. Codex's available model list may cover
 one provider. Claude's native Agent model aliases select Claude models.

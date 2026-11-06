@@ -53,12 +53,17 @@ exposed or discoverable tools and existing agent definitions first. Never call
 an unlisted T3 tool to test whether it exists.
 Resolve effort through a supported tool field or configured model variant.
 If the route cannot express the requested effort, report that gap before dispatch.
+When T3 orchestration is available, use its route even if the parent model runs
+through Codex, Claude Code, or OpenCode. Use the native routes only outside T3;
+a failed T3 request does not authorize switching routes.
 
 - **T3 Code:** resolve the model with `orchestrator_capabilities`. Use
   `delegate_task` every round with the exposed review role and async mode.
   Save `taskId` and use a new `clientRequestId` per round. `childThreadId`
   is storage, not a continuation target. Use delegation, not thread-launch
-  or thread-message tools.
+  or thread-message tools. Select the provider instance and Sol model explicitly
+  from capabilities. Use exposed `task_status` and `task_cancel` for ambiguous
+  completion and cancellation respectively.
 - **Codex:** use `spawn_agent` with an exact Sol ID from the live model list
   and the requested `reasoning_effort` if supported. Use `fork_turns: "none"`
   and a complete `message` when overrides require it. Save the returned agent

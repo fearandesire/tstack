@@ -14,15 +14,19 @@ Resolve the council before starting delegates. Use the roster in the current
 request, then applicable project instructions, then global instructions,
 subject to the host's instruction hierarchy. An explicit roster replaces the
 whole default, including its size and provider mix. Honor two reviewers or
-multiple models from one provider when requested. Otherwise use three strong
-models from three different providers at high reasoning effort. Resolve current
+multiple models from one provider when requested. Otherwise use the latest
+flagship model from each of three different providers at high reasoning effort.
+Resolve current
 model IDs from available capabilities; names such as Opus, Sol, and Gemini Pro
 are examples, not pinned IDs.
 
 For each seat record the requested provider, model, effort, and available
 dispatch route. Resolve requested effort through that route's supported effort
-field or configured model variant. If it cannot express that effort, report
-the gap before dispatch rather than approximate it. Inspect the current tool
+field or configured model variant. If it cannot express effort explicitly
+chosen by the user, report the gap before dispatch rather than approximate it.
+For the default high effort, use a supported control when available, otherwise
+request high effort in the brief and label the effective effort unverified.
+Inspect the current tool
 schemas and existing agent definitions
 before choosing a route. A tool's model field does not imply arbitrary-provider
 support. If any required seat is unavailable, report the missing route before
@@ -33,6 +37,9 @@ Keep existing authentication, provider settings, and permissions intact.
 
 Use only tools exposed or discoverable in this session. Tool names can be
 namespaced. Follow the live schema when a version differs from these examples.
+When T3 orchestration is available, use the T3 Code route even if the parent
+model runs through Codex, Claude Code, or OpenCode. The native routes below
+apply outside T3. A T3 failure is not permission to switch to a native route.
 
 ### T3 Code
 
@@ -42,6 +49,12 @@ review role and asynchronous mode. Save each returned `taskId` and wait for its
 completion notice. On another round use a fresh request ID and `delegate_task`;
 a `childThreadId` is storage, not a continuation target. Do not create chats
 or use thread-message tools as a replacement for delegation.
+Preserve the default three-provider roster and high-effort request unless the
+user's instructions choose another roster or effort. Set each target's provider
+instance and model explicitly from capabilities so it does not inherit the
+parent's model or select the target provider's first model accidentally.
+Use `task_status` to resolve an ambiguous completion and `task_cancel` to stop
+a failed or abandoned task when those controls are exposed.
 
 ### Codex
 
