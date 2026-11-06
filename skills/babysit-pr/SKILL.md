@@ -40,6 +40,22 @@ branch conflicts.
 Wait with `scripts/pr-wait` from this skill's directory (use its absolute
 path).
 
+On native Windows, run this same helper through an installed WSL distribution.
+Its file lock uses Unix `fcntl`; native Windows Python cannot run it. Use the
+PR URL or an explicit `--repo` so the WSL invocation does not depend on reading
+a Windows Git worktree. For example, in PowerShell:
+
+```powershell
+$helper = 'C:/absolute/path/to/this/skill/scripts/pr-wait'
+$linuxHelper = (& wsl.exe -- wslpath -a $helper).Trim()
+& wsl.exe -- python3 $linuxHelper 'https://github.com/owner/repo/pull/123' --until ready
+```
+
+Use the existing authenticated `gh` in that distribution. If WSL, `python3`,
+or authenticated GitHub access is unavailable, report that missing prerequisite.
+Keep the existing account and credentials; use the normal sign-in path when
+authentication is required. The parent owns this single watcher in WSL too.
+
 ```bash
 pr-wait <pr> [--repo owner/name] [--until ready|green|any-change]
 ```
@@ -50,6 +66,8 @@ unresolved threads, PR closed), and 2 on bad input.
 
 - `ready` (default): required checks green, Greptile or Macroscope reviewed the
   head, and no unresolved threads. Use this to babysit.
+  A failed, cancelled, or skipped gating-bot review check requires action and
+  cannot satisfy readiness.
 - `green`: required checks only. Use it when the repo has no Greptile or
   Macroscope.
 - `any-change`: exit on the first event.
