@@ -417,13 +417,22 @@ class Watcher:
         # summary names the head.
         bot_status: dict[str, str] = {}
         reviewed: list[str] = []
+        review_failures: list[str] = []
         for bot in GATING_BOTS + ADVISORY_BOTS:
             own_checks = {name: c for name, c in checks.items() if bot_name(name) == bot}
             summaries = [c for c in comments if bot_name(who(c)[0]) == bot]
             own_reviews = [r for r in reviews if bot_name(who(r)[0]) == bot]
             on_head = any((r.get("commit") or {}).get("oid") == head for r in own_reviews)
             if own_checks:
-                done = all(c["bucket"] != "pending" for c in own_checks.values())
+                if bot in GATING_BOTS:
+                    done = all(c["bucket"] == "pass" for c in own_checks.values())
+                    for name, check in own_checks.items():
+                        if check["bucket"] in (*FAILED, "skipping"):
+                            line = f"review check {check['bucket']}: {name} {check['link']}"
+                            review_failures.append(line)
+                            self.emit(f"review-fail:{head}:{name}:{check['bucket']}", line)
+                else:
+                    done = all(c["bucket"] != "pending" for c in own_checks.values())
             else:
                 done = on_head or any(short in s["body"] for s in summaries)
             seen = bool(own_checks or summaries or own_reviews)
@@ -500,6 +509,8 @@ class Watcher:
                 self.finish(1, [dirty_line])
             if fail_lines:
                 self.finish(1, fail_lines)
+            if self.until == "ready" and review_failures:
+                self.finish(1, review_failures)
             if green and self.until == "green":
                 self.reported.add(checks_key)
                 self.finish(0, [f"green on {short}: {summary}{self.behind(base, base_oid, head)}"])

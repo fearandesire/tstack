@@ -42,6 +42,9 @@ cp -R tstack/skills/* ~/.codex/skills/    # Codex
 
 - An authenticated [GitHub CLI](https://cli.github.com) (`gh`).
 - `python3` for `babysit-pr`'s `pr-wait` script.
+- On native Windows, run `pr-wait` through WSL with Python and an already
+  authenticated `gh`. The skill includes the PowerShell invocation. T3 Code
+  keeps its built-in watcher route.
 - `council` and `sol-loop` need subagents on other providers' models. T3 Code
   does this with `delegate_task`. Otherwise you need a harness that can run
   those models.
@@ -85,5 +88,8 @@ or silently selecting another model. Installing the skills does not add model
 subscriptions or multi-provider access to Claude.ai.
 
 ## License
+
+Run the watcher regression checks with `python3 tests/test_pr_wait.py` on Linux
+or WSL.
 
 [MIT](LICENSE)
