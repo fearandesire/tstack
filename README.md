@@ -87,9 +87,11 @@ missing models or runtime substitutions rather than creating a provider bridge
 or silently selecting another model. Installing the skills does not add model
 subscriptions or multi-provider access to Claude.ai.
 
-## License
+## Verify
 
 Run the watcher regression checks with `python3 tests/test_pr_wait.py` on Linux
 or WSL.
+
+## License
 
 [MIT](LICENSE)
